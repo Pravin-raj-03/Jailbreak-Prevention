@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       build: {
         lib: {
           // FIX: `__dirname` is not available in ES modules. Use `import.meta.url` to get the current directory.
-          entry: resolve(fileURLToPath(new URL('.', import.meta.url)), 'src/index.ts'),
+          entry: resolve(fileURLToPath(new URL('./src', import.meta.url)), 'src/index.ts'),
           name: 'JailbreakPreventionSystem',
           fileName: 'jailbreak-prevention-system',
         },

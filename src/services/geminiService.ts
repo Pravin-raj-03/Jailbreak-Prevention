@@ -1,36 +1,41 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { IndividualAnalysisResult, ModerationResult, SubnetAnalysisResult, PromptAnalysis } from '../types';
-import { getGeminiInstance } from './geminiClient';
+import type { IndividualAnalysisResult, SubnetAnalysisResult, ModerationResult, PromptAnalysis } from '../types';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// This setup uses the API_KEY provided by the Vite configuration (from the .env file).
+// It's a clean and standard way to handle keys for local development.
+if (!process.env.API_KEY) {
+    console.error("API_KEY environment variable is not set or empty. Please create a .env file and provide a Gemini API key.");
+}
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+
 /**
- * Wraps the generateContent call with a resilient exponential
- * backoff mechanism for rate-limiting errors.
+ * Wraps the generateContent call with a resilient exponential backoff mechanism.
+ * If a request fails due to a rate limit (429), it automatically retries after a delay.
  */
 async function generateContentWithRetry(
     params: Parameters<InstanceType<typeof GoogleGenAI>['models']['generateContent']>[0]
 ): Promise<ReturnType<InstanceType<typeof GoogleGenAI>['models']['generateContent']>> {
-    
-    await sleep(200); // Small proactive delay
+    if (!process.env.API_KEY) {
+        throw new Error("No API key configured. Please set the API_KEY environment variable.");
+    }
     
     let lastError: Error | null = null;
-    const maxRetries = 5; 
+    const maxRetries = 3;
     const initialDelay = 1000;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-            const ai = getGeminiInstance();
+            await sleep(500); // Proactive delay to be polite to the API
             const response = await ai.models.generateContent(params);
             return response;
         } catch (e: unknown) {
             lastError = e instanceof Error ? e : new Error(String(e));
-            
             if (e instanceof Error && (e.message.includes('429') || e.message.toLowerCase().includes('resource_exhausted'))) {
-                console.warn(`Attempt ${attempt + 1}/${maxRetries}: Request rate-limited.`);
-                if (attempt === maxRetries - 1) break; 
                 const backoffTime = initialDelay * Math.pow(2, attempt) + Math.random() * 1000;
-                console.log(`Waiting for ${Math.round(backoffTime / 1000)}s before retrying...`);
+                console.warn(`Attempt ${attempt + 1}/${maxRetries} rate-limited. Retrying in ${Math.round(backoffTime / 1000)}s...`);
                 await sleep(backoffTime);
             } else {
                 console.error(`A non-rate-limit error occurred:`, e);

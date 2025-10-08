@@ -1,6 +1,5 @@
 // Main App Component (for easy use)
 export { default as JailbreakPreventionSystem } from './App';
-export { default as JPSProvider } from './JPSProvider';
 
 // Components
 export { default as PromptInput } from './components/PromptInput';

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import type { AllSubnetsState, PromptAnalysis, GraphLink } from '../types';
 import { checkPromptSimilarity } from '../services/geminiService';
@@ -31,6 +32,7 @@ const ThreatGraph: React.FC<{ allSubnets: AllSubnetsState, onClose: () => void }
 
     const promptMap = useMemo(() => {
         const map = new Map<string, PromptAnalysis>();
+        // FIX: Add explicit type for `prompts` to resolve type inference issue.
         Object.values(allSubnets).forEach((prompts: PromptAnalysis[]) => {
             prompts.forEach(p => map.set(`${p.subnet}-${p.id}`, p));
         });
@@ -185,9 +187,9 @@ const ThreatGraph: React.FC<{ allSubnets: AllSubnetsState, onClose: () => void }
                         ))}
 
                         {/* Render intra-subnet sequential links */}
-                        {Object.values(allSubnets).map((prompts: PromptAnalysis[], idx) => 
-                            <g key={`subnet-group-${idx}`}>
-                            {prompts.slice(0, -1).map((p1, i) => {
+                        {/* FIX: Use `map` instead of `forEach` to render elements. Add explicit type for `prompts` to fix type error. */}
+                        {Object.values(allSubnets).map((prompts: PromptAnalysis[]) => 
+                            prompts.slice(0, -1).map((p1, i) => {
                                 const p2 = prompts[i+1];
                                 const pos1 = layout.get(`${p1.subnet}-${p1.id}`);
                                 const pos2 = layout.get(`${p2.subnet}-${p2.id}`);
@@ -196,8 +198,7 @@ const ThreatGraph: React.FC<{ allSubnets: AllSubnetsState, onClose: () => void }
                                 return (
                                     <line key={key} x1={pos1.x} y1={pos1.y} x2={pos2.x} y2={pos2.y} stroke="#4b5563" strokeDasharray="3 3" />
                                 );
-                            })}
-                            </g>
+                            })
                         )}
                         
                          {/* Render semantic links */}

@@ -1,4 +1,3 @@
-
 import { analyzePromptRisk } from './geminiService';
 import type { ValidationSession, ValidationResultItem, ValidationMetrics, PromptAnalysis, ConfusionMatrix, ROCPoint, PRPoint, ThresholdMetrics } from '../types';
 import { predictSessionRiskWithLocalModel, DEFAULT_MODEL_WEIGHTS } from './riskModelService';
@@ -26,8 +25,7 @@ export async function runValidation(
       currentPrompts.push({
         id: currentPrompts.length + 1,
         text: promptText,
-        // Add subnet to satisfy PromptAnalysis type for validation context.
-        subnet: session.id,
+        subnet: session.id, // Use session ID for subnet in validation context
         ...individualAnalysis,
       });
     }

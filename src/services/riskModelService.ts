@@ -72,7 +72,11 @@ const sigmoid = (z: number): number => {
  */
 const predictFromFeatures = (features: FeatureVector, weights: ModelWeights): SessionAnalysisResult => {
     const logit = (Object.keys(features) as Features[]).reduce((acc, key) => {
-        return acc + features[key] * weights[key];
+        // Ensure the weight exists before using it.
+        if (key in weights) {
+            return acc + features[key] * weights[key];
+        }
+        return acc;
     }, weights.intercept);
 
     const sessionRiskScore = sigmoid(logit);

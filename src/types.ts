@@ -1,4 +1,3 @@
-
 export interface IndividualAnalysisResult {
   score: number;
   justification: string;
