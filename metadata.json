@@ -1,0 +1,5 @@
+{
+  "name": "Jailbreak Prevention System",
+  "description": "An AI-powered tool to analyze user prompts against a custom set of rules to detect and prevent potential jailbreak attempts. Upload your rule file, enter a prompt, and get a detailed security analysis.",
+  "requestFramePermissions": []
+}
