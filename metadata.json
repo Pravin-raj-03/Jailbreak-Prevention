@@ -1,5 +1,5 @@
 {
   "name": "Jailbreak Prevention System",
-  "description": "An AI-powered tool to analyze user prompts against a custom set of rules to detect and prevent potential jailbreak attempts. Upload your rule file, enter a prompt, and get a detailed security analysis.",
+  "description": "An advanced AI-powered system for real-time detection and analysis of multi-turn jailbreak attempts. It provides live session monitoring, multi-user threat intelligence, model validation, and custom model training capabilities.",
   "requestFramePermissions": []
 }
