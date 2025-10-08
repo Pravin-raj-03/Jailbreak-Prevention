@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import type { AllSubnetsState, PromptAnalysis, GraphLink } from '../types';
 import { checkPromptSimilarity } from '../services/geminiService';
@@ -32,7 +31,6 @@ const ThreatGraph: React.FC<{ allSubnets: AllSubnetsState, onClose: () => void }
 
     const promptMap = useMemo(() => {
         const map = new Map<string, PromptAnalysis>();
-        // FIX: Add explicit type for `prompts` to resolve type inference issue.
         Object.values(allSubnets).forEach((prompts: PromptAnalysis[]) => {
             prompts.forEach(p => map.set(`${p.subnet}-${p.id}`, p));
         });
@@ -187,9 +185,8 @@ const ThreatGraph: React.FC<{ allSubnets: AllSubnetsState, onClose: () => void }
                         ))}
 
                         {/* Render intra-subnet sequential links */}
-                        {/* FIX: Use `map` instead of `forEach` to render elements. Add explicit type for `prompts` to fix type error. */}
                         {Object.values(allSubnets).map((prompts: PromptAnalysis[], idx) => 
-                            <g key={`group-${idx}`}>
+                            <g key={`subnet-group-${idx}`}>
                             {prompts.slice(0, -1).map((p1, i) => {
                                 const p2 = prompts[i+1];
                                 const pos1 = layout.get(`${p1.subnet}-${p1.id}`);

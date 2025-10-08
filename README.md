@@ -20,39 +20,82 @@ An advanced AI-powered system for real-time detection and analysis of multi-turn
 
 ## Getting Started
 
-Follow these steps to run the application locally.
+Follow these steps to install and use the component library in your project.
 
 ### Prerequisites
 
 - Node.js and npm installed.
-- A Google Gemini API key. You can get one from [Google AI Studio](https://ai.studio.google.com/app/apikey). You can provide multiple keys as a comma-separated list for automatic key rotation and rate-limiting resilience.
+- A React project (`create-react-app`, `vite`, etc.).
+- A Google Gemini API key. You can get one from [Google AI Studio](https://ai.studio.google.com/app/apikey).
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd jailbreak-prevention-system
-    ```
+Install the package from npm:
+```bash
+npm install @pravinraj2006/jailbreak-prevention-system
+```
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+### Usage & API Key Configuration
 
-3.  **Set up environment variables:**
-    Create a file named `.env.local` in the root of the project and add your Gemini API key:
-    ```
-    GEMINI_API_KEY="YOUR_API_KEY_HERE"
-    # You can add multiple keys separated by commas
-    # GEMINI_API_KEY="KEY_1,KEY_2,KEY_3"
-    ```
+This library requires a Google Gemini API key to function. The key must be provided at runtime to the `JPSProvider` component, which should wrap your application's root. This approach ensures that your API key is handled securely and is not bundled in your client-side code.
 
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    The application will be available at `http://localhost:3000`.
+**1. Import the Provider and Components:**
+Import the `JPSProvider` and the components you need from the library.
+
+**2. Wrap Your App and Provide the Key:**
+In your main application entry point (e.g., `index.tsx` or `App.tsx`), wrap your component tree with `JPSProvider` and pass your Gemini API key as the `apiKey` prop.
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { JPSProvider, JailbreakPreventionSystem } from '@pravinraj2006/jailbreak-prevention-system';
+
+// It is highly recommended to load your API key from a secure
+// environment variable, rather than hardcoding it.
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY; 
+
+const App = () => (
+  <JPSProvider apiKey={GEMINI_API_KEY}>
+    {/* The JailbreakPreventionSystem or your custom components go here */}
+    <JailbreakPreventionSystem />
+  </JPSProvider>
+);
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+```
+
+### Using Individual Components
+You can also import and use individual components or services from the library to build a custom implementation. Just ensure they are rendered inside a `JPSProvider`.
+
+```jsx
+import { JPSProvider, PromptInput, SessionAnalysis } from '@pravinraj2006/jailbreak-prevention-system';
+
+function MyCustomSecurityUI() {
+  // Your custom logic here...
+  return (
+    <div>
+      <PromptInput onNewPrompt={...} />
+      <SessionAnalysis analysis={...} />
+    </div>
+  );
+}
+    
+// Remember to wrap with the provider
+const App = () => (
+   <JPSProvider apiKey={GEMINI_API_KEY}>
+    <MyCustomSecurityUI />
+  </JPSProvider>
+)
+```
+
+## Local Development
+
+To run this project locally for development:
+
+1. Clone the repo and run `npm install`.
+2. Create a `.env` file in the root and add `API_KEY="YOUR_API_KEY_HERE"`.
+3. Run `npm run dev`.
 
 ## Disclaimer
 

@@ -1,4 +1,3 @@
-
 import type { PromptAnalysis, SessionAnalysisResult, ModelWeights, ValidationSession, ValidationResultItem, TrainingReport } from '../types';
 import { analyzePromptRisk } from './geminiService';
 import { calculateMetrics } from './validationService';
@@ -69,27 +68,33 @@ const sigmoid = (z: number): number => {
 };
 
 /**
+ * Predicts session risk from a pre-calculated feature vector.
+ */
+const predictFromFeatures = (features: FeatureVector, weights: ModelWeights): SessionAnalysisResult => {
+    const logit = (Object.keys(features) as Features[]).reduce((acc, key) => {
+        return acc + features[key] * weights[key];
+    }, weights.intercept);
+
+    const sessionRiskScore = sigmoid(logit);
+
+    let classification: SessionAnalysisResult['classification'];
+    if (sessionRiskScore >= 0.8) classification = 'Harmful';
+    else if (sessionRiskScore >= 0.4) classification = 'Potentially Harmful';
+    else classification = 'Safe';
+
+    return { sessionRiskScore, classification };
+}
+
+
+/**
  * Predicts session risk using a logistic regression model with provided weights.
  */
 export const predictSessionRiskWithLocalModel = (prompts: PromptAnalysis[], weights: ModelWeights): SessionAnalysisResult => {
   if (prompts.length === 0) {
     return { sessionRiskScore: 0, classification: 'Safe' };
   }
-
   const features = extractFeatures(prompts);
-
-  const logit = (Object.keys(features) as Features[]).reduce((acc, key) => {
-    return acc + features[key] * weights[key];
-  }, weights.intercept);
-
-  const sessionRiskScore = sigmoid(logit);
-
-  let classification: SessionAnalysisResult['classification'];
-  if (sessionRiskScore >= 0.8) classification = 'Harmful';
-  else if (sessionRiskScore >= 0.4) classification = 'Potentially Harmful';
-  else classification = 'Safe';
-
-  return { sessionRiskScore, classification };
+  return predictFromFeatures(features, weights);
 };
 
 
@@ -170,18 +175,8 @@ export async function trainModel(
     // --- 4. Evaluate on Test Set ---
     const testSetResults: ValidationResultItem[] = [];
     for (const { features, session } of testSet) {
-        // To predict on the test set, we need to reconstruct a minimal PromptAnalysis array
-        // that will yield the same feature vector that was generated from the original test session.
-        // This is a bit of a hack, but it allows us to reuse the predictSessionRiskWithLocalModel function.
-        const tempScores = Array(features.sessionLength).fill(features.averageScore);
-        if(features.sessionLength > 0) tempScores[tempScores.length -1] = features.lastScore;
-        
-        const tempPrompts: PromptAnalysis[] = tempScores.map((s, i) => ({
-             id: i, text: '', score: s, justification: '', subnet: '', isJailbreak: false, attackCategories: []
-        }));
-
-
-        const { sessionRiskScore, classification } = predictSessionRiskWithLocalModel(tempPrompts, weights);
+        // Use the new predictFromFeatures function for accurate evaluation
+        const { sessionRiskScore, classification } = predictFromFeatures(features, weights);
         const simplifiedPrediction = classification === 'Safe' ? 'Safe' : 'Harmful';
         testSetResults.push({
             sessionId: session.id,

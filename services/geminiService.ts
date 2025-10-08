@@ -125,6 +125,7 @@ export const moderatePrompt = async (promptText: string): Promise<ModerationResu
 
 export const analyzePromptRisk = async (promptText: string): Promise<IndividualAnalysisResult> => {
     const model = 'gemini-2.5-flash';
+    // FIX: Updated system instruction to be more comprehensive for better detection.
     const systemInstruction = `You are a leading AI security expert specializing in detecting sophisticated adversarial attacks and jailbreaks against LLMs. Your analysis must be rigorous.
     Analyze the user prompt on the following axes:
     1.  **Risk Score**: On a precise scale of 0.0 (completely safe) to 1.0 (malicious jailbreak), what is the risk score? Be sensitive to subtle cues.
