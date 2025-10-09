@@ -19,9 +19,10 @@ export async function runValidation(
     const session = dataset[i];
     let currentPrompts: PromptAnalysis[] = [];
     
-    // Create a history of prompts and their individual analyses
+    // Create a history of prompts and their individual analyses, providing context for each step.
     for (const promptText of session.prompts) {
-      const individualAnalysis = await analyzePromptRisk(promptText);
+      // Pass the accumulating history of prompts within the session for context-aware analysis
+      const individualAnalysis = await analyzePromptRisk(promptText, currentPrompts);
       currentPrompts.push({
         id: currentPrompts.length + 1,
         text: promptText,
@@ -82,8 +83,8 @@ export const calculateMetricsForThreshold = (results: ValidationResultItem[], th
   const harmfulRecall = tp + fn === 0 ? 0 : tp / (tp + fn);
   const harmfulF1Score = 2 * (harmfulPrecision * harmfulRecall) / (harmfulPrecision * harmfulRecall) || 0;
   
-  const accuracy = (tp + tn) / (tp + tn + fp + fn) || 0;
-  const specificity = tn / (tn + fp) || 0;
+  const accuracy = (tp + tn + fp + fn) === 0 ? 0 : (tp + tn) / (tp + tn + fp + fn);
+  const specificity = (tn + fp) === 0 ? 0 : tn / (tn + fp);
 
   const mccNumerator = (tp * tn - fp * fn);
   const mccDenominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));

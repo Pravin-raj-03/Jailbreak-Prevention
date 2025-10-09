@@ -18,42 +18,43 @@ An advanced AI-powered system for real-time detection and analysis of multi-turn
 - **Charting**: Recharts
 - **Build Tool**: Vite
 
-## Getting Started
+## Getting Started: Development Setup
 
-Follow these steps to run the project locally.
+Follow these steps to set up the project locally for development and contributions.
 
 ### Prerequisites
 
-- Node.js and npm installed.
+- Node.js (v18 or newer) and npm.
 - A Google Gemini API key. You can get one from [Google AI Studio](https://ai.studio.google.com/app/apikey).
 
 ### Installation & Setup
 
 1.  **Clone the Repository**:
+    First, clone the project repository to your local machine.
     ```bash
-    git clone <your-repo-url>
+    git clone https://github.com/pravinraj2006/jailbreak-prevention-system.git
     cd jailbreak-prevention-system
     ```
 
 2.  **Install Dependencies**:
-    This command reads the `package.json` file and installs all the necessary libraries.
+    This command reads the `package.json` file and installs all the necessary libraries and development tools.
     ```bash
     npm install
     ```
 
 3.  **Configure API Key**:
-    Create a file named `.env` in the root of the project directory and add your Google Gemini API key to it.
+    Create a new file named `.env` in the root of the project directory. This file will store your secret API key and will not be checked into Git. Add your Google Gemini API key to it like this:
     ```
     # .env file
     API_KEY="YOUR_GEMINI_API_KEY_HERE"
     ```
 
 4.  **Run the Development Server**:
+    You're all set! Run the following command to start the application.
     ```bash
     npm run dev
     ```
-    This will start the application, and you can view it in your browser at the local address provided.
-
+    This will start the Vite development server, and you can view the running application in your browser at the local address provided (usually `http://localhost:5173`).
 
 ## Disclaimer
 

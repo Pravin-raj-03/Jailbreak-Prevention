@@ -6,7 +6,7 @@ export interface IndividualAnalysisResult {
 }
 
 export interface ModerationResult {
-  blocked: boolean;
+  moderationScore: number; // Score from 0.0 (safe) to 1.0 (violates policy)
   reason: string;
 }
 

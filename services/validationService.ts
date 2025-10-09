@@ -1,6 +1,5 @@
 import { analyzePromptRisk } from './geminiService';
 import type { ValidationSession, ValidationResultItem, ValidationMetrics, PromptAnalysis, ConfusionMatrix, ROCPoint, PRPoint, ThresholdMetrics } from '../types';
-// Fix: Import DEFAULT_MODEL_WEIGHTS to pass to the prediction function.
 import { predictSessionRiskWithLocalModel, DEFAULT_MODEL_WEIGHTS } from './riskModelService';
 
 /**
@@ -20,19 +19,18 @@ export async function runValidation(
     const session = dataset[i];
     let currentPrompts: PromptAnalysis[] = [];
     
-    // Create a history of prompts and their individual analyses
+    // Create a history of prompts and their individual analyses, providing context for each step.
     for (const promptText of session.prompts) {
-      const individualAnalysis = await analyzePromptRisk(promptText);
+      // Pass the accumulating history of prompts within the session for context-aware analysis
+      const individualAnalysis = await analyzePromptRisk(promptText, currentPrompts);
       currentPrompts.push({
         id: currentPrompts.length + 1,
         text: promptText,
-        // Add subnet to satisfy PromptAnalysis type for validation context.
-        subnet: session.id,
+        subnet: session.id, // Use session ID for subnet in validation context
         ...individualAnalysis,
       });
     }
 
-    // FIX: Added session risk prediction and result aggregation.
     const sessionResult = predictSessionRiskWithLocalModel(currentPrompts, DEFAULT_MODEL_WEIGHTS);
     const prediction = sessionResult.classification;
     // Potentially Harmful is considered Harmful for binary classification
@@ -52,12 +50,10 @@ export async function runValidation(
     progressCallback(((i + 1) / totalSessions) * 100, i + 1, totalSessions);
   }
 
-  // FIX: Added return statement to resolve the "function must return a value" error.
   return allResults;
 }
 
 
-// FIX: Added and exported calculateMetricsForThreshold function to resolve import errors.
 /**
  * Calculates detailed performance metrics for a specific classification threshold.
  */
@@ -87,8 +83,8 @@ export const calculateMetricsForThreshold = (results: ValidationResultItem[], th
   const harmfulRecall = tp + fn === 0 ? 0 : tp / (tp + fn);
   const harmfulF1Score = 2 * (harmfulPrecision * harmfulRecall) / (harmfulPrecision * harmfulRecall) || 0;
   
-  const accuracy = (tp + tn) / (tp + tn + fp + fn) || 0;
-  const specificity = tn / (tn + fp) || 0;
+  const accuracy = (tp + tn + fp + fn) === 0 ? 0 : (tp + tn) / (tp + tn + fp + fn);
+  const specificity = (tn + fp) === 0 ? 0 : tn / (tn + fp);
 
   const mccNumerator = (tp * tn - fp * fn);
   const mccDenominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
@@ -109,7 +105,6 @@ export const calculateMetricsForThreshold = (results: ValidationResultItem[], th
   };
 };
 
-// FIX: Added and exported calculateMetrics function to resolve import errors.
 /**
  * Calculates a full validation report, including ROC/PR curves and metrics at a default 0.5 threshold.
  */

@@ -50,32 +50,45 @@ function App() {
     }
 
     try {
-      // Step 1: Pre-analysis moderation
-      const moderationResult = await moderatePrompt(promptText);
-
+      const isSingleWordInitialPrompt = prompts.length === 0 && promptText.trim().split(/\s+/).length === 1;
       let newPromptAnalysis: PromptAnalysis;
 
-      if (moderationResult.blocked && moderationResult.reason !== 'NONE') {
-        // Prompt is blocked, create a high-risk analysis object directly
-        newPromptAnalysis = {
-          id: prompts.length + 1,
-          text: promptText,
-          subnet: currentSubnet,
-          score: 1.0,
-          isJailbreak: true, // Treat policy violations as a form of jailbreak
-          attackCategories: [moderationResult.reason],
-          justification: 'Prompt blocked by pre-analysis safety moderator due to policy violation.',
-          moderationReason: moderationResult.reason,
-        };
-      } else {
-        // Step 2: Proceed with detailed risk analysis if not blocked
-        const individualAnalysis = await analyzePromptRisk(promptText);
+      if (isSingleWordInitialPrompt) {
+        // Deterministic Bypass: If it's the first prompt and only a single word,
+        // skip the strict moderation and go directly to the nuanced, context-aware risk analysis.
+        const individualAnalysis = await analyzePromptRisk(promptText, prompts);
         newPromptAnalysis = {
           id: prompts.length + 1,
           text: promptText,
           subnet: currentSubnet,
           ...individualAnalysis,
         };
+      } else {
+        // Step 1: Pre-analysis moderation with conversation history
+        const moderationResult = await moderatePrompt(promptText, prompts);
+
+        if (moderationResult.blocked && moderationResult.reason !== 'NONE') {
+          // Prompt is blocked, create a high-risk analysis object directly
+          newPromptAnalysis = {
+            id: prompts.length + 1,
+            text: promptText,
+            subnet: currentSubnet,
+            score: 1.0,
+            isJailbreak: true, // Treat policy violations as a form of jailbreak
+            attackCategories: [moderationResult.reason],
+            justification: 'Prompt blocked by pre-analysis safety moderator due to policy violation.',
+            moderationReason: moderationResult.reason,
+          };
+        } else {
+          // Step 2: Proceed with detailed, context-aware risk analysis if not blocked
+          const individualAnalysis = await analyzePromptRisk(promptText, prompts);
+          newPromptAnalysis = {
+            id: prompts.length + 1,
+            text: promptText,
+            subnet: currentSubnet,
+            ...individualAnalysis,
+          };
+        }
       }
 
       const updatedPrompts = [...prompts, newPromptAnalysis];
@@ -89,8 +102,19 @@ function App() {
 
       // Use the local ML model (with current weights) for session analysis.
       if (updatedPrompts.length > 0) {
-        const sessionResult = predictSessionRiskWithLocalModel(updatedPrompts, modelWeights);
-        setSessionAnalysis(sessionResult);
+        const newSessionResult = predictSessionRiskWithLocalModel(updatedPrompts, modelWeights);
+        const previousScore = sessionAnalysis?.sessionRiskScore ?? 0;
+
+        // The session risk score is now 'sticky' and will only increase.
+        if (newSessionResult.sessionRiskScore >= previousScore) {
+          setSessionAnalysis(newSessionResult);
+        } else {
+          // If the new score is lower, we create a new result object but keep the old, higher score
+          setSessionAnalysis({
+            ...newSessionResult,
+            sessionRiskScore: previousScore,
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -98,7 +122,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [prompts, currentSubnet, modelWeights]);
+  }, [prompts, currentSubnet, modelWeights, sessionAnalysis]);
 
   const handleReset = () => {
     setPrompts([]);
