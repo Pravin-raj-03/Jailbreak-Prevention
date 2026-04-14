@@ -1,0 +1,5 @@
+{
+  "name": "Jailbreak Prevention System",
+  "description": "An advanced AI-powered system for real-time detection and analysis of multi-turn jailbreak attempts. It provides live session monitoring, multi-user threat intelligence, model validation, and custom model training capabilities.",
+  "requestFramePermissions": []
+}
